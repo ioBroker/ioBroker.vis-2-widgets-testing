@@ -217,8 +217,8 @@ async function addWidget(page, widgetName) {
         return await window.visAddWidget(_widgetName, 0, 0);
     }, widgetName);
 
-    console.log(`Widget added: ${wid}`);
     await page.waitForSelector(`#${wid}`, { timeout: 2000 });
+    return wid;
 }
 
 async function deleteWidget(page, wid){
