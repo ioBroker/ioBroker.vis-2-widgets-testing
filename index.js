@@ -179,7 +179,7 @@ function checkIsVisUploadedAsync(states, counter) {
     return new Promise(resolve => checkIsVisUploaded(states, resolve, counter));
 }
 
-async function placeWidgetOnView(page, widgetName, withDelete) {
+async function addWidget(page, widgetName) {
     page = page || gPage;
     await page.waitForSelector(`#widget_${widgetName}`, { timeout: 5000 });
 
@@ -220,13 +220,14 @@ async function placeWidgetOnView(page, widgetName, withDelete) {
     console.log(`Widget added: ${wid}`);
     await page.waitForSelector(`#${wid}`, { timeout: 2000 });
     await page.screenshot({path: `${rootDir}tmp/screenshots/10_${widgetName}.png`});
-    if (withDelete) {
-        // select widget
-        await page.click(`#${wid}`);
-        await page.keyboard.press('Delete');
-        await page.waitForSelector(`#ar_dialog_confirm_ok_deleteDialog`, { timeout: 2000 });
-        await page.click('#ar_dialog_confirm_ok_deleteDialog');
-    }
+}
+
+async function deleteWidget(page, wid){
+    // select widget
+    await page.click(`#${wid}`);
+    await page.keyboard.press('Delete');
+    await page.waitForSelector(`#ar_dialog_confirm_ok_deleteDialog`, { timeout: 2000 });
+    await page.click('#ar_dialog_confirm_ok_deleteDialog');
 }
 
 async function openWidgetSet(page, widgetSetName) {
@@ -260,8 +261,13 @@ module.exports = {
     setOnStateChanged: cb => onStateChanged = cb,
     checkIsVisUploaded,
     checkIsVisUploadedAsync,
-    placeWidgetOnView,
-    openWidgetSet,
+    palette: {
+        addWidget,
+        openWidgetSet,
+        getListOfWidgets,
+    },
+    view: {
+        deleteWidget,
+    },
     screenshot,
-    getListOfWidgets,
 }
