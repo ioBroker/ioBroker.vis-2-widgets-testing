@@ -29,7 +29,7 @@ function deleteFoldersRecursive(path) {
     }
 }
 
-async function startPuppeteer(headless) {
+async function startBrowser(headless) {
     const browser = await puppeteer.launch({headless: !!headless});
     const pages = await browser.pages();
     const timeout = 5000;
@@ -150,7 +150,7 @@ async function createProject(page) {
     await page.screenshot({path: `${rootDir}tmp/screenshots/01_loaded.png`});
 }
 
-async function stopPuppeteer(browser) {
+async function stopBrowser(browser) {
     browser = browser || gBrowser;
     await browser.close();
 }
@@ -219,7 +219,6 @@ async function addWidget(page, widgetName) {
 
     console.log(`Widget added: ${wid}`);
     await page.waitForSelector(`#${wid}`, { timeout: 2000 });
-    await page.screenshot({path: `${rootDir}tmp/screenshots/10_${widgetName}.png`});
 }
 
 async function deleteWidget(page, wid){
@@ -247,7 +246,7 @@ async function getListOfWidgets(page, widgetSetName)   {
     const result = [];
     for (let w = 0; w < widgets.length; w++) {
         const wid = await (await widgets[w].getProperty('id')).jsonValue();
-        result.push(wid);
+        result.push(wid.substring('widget_'.length));
     }
     return result;
 }
@@ -255,8 +254,8 @@ async function getListOfWidgets(page, widgetSetName)   {
 module.exports = {
     startIoBroker,
     stopIoBroker,
-    startPuppeteer,
-    stopPuppeteer,
+    startBrowser,
+    stopBrowser,
     createProject,
     setOnStateChanged: cb => onStateChanged = cb,
     checkIsVisUploaded,
