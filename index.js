@@ -7,6 +7,8 @@ let rootDir = `${__dirname}/../../../`;
 let objects = null;
 let states  = null;
 let onStateChanged = null;
+let gBrowser;
+let gPage;
 
 function deleteFoldersRecursive(path) {
     if (path.endsWith('/')) {
@@ -38,6 +40,9 @@ async function startPuppeteer(headless) {
         height: 1080,
         deviceScaleFactor: 1,
     });
+
+    gBrowser = browser;
+    gPage = pages[0];
 
     return { browser, page: pages[0] };
 }
@@ -129,6 +134,7 @@ async function stopIoBroker() {
 }
 
 async function createProject(page) {
+    page = page || gPage;
     await page.goto('http://127.0.0.1:18082/vis-2-beta/edit.html', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#create_new_project', { timeout: 10000 });
     await page.click('#create_new_project');
@@ -145,6 +151,7 @@ async function createProject(page) {
 }
 
 async function stopPuppeteer(browser) {
+    browser = browser || gBrowser;
     await browser.close();
 }
 
@@ -173,6 +180,7 @@ function checkIsVisUploadedAsync(states, counter) {
 }
 
 async function placeWidgetOnView(page, widgetName, withDelete) {
+    page = page || gPage;
     await page.waitForSelector(`#widget_${widgetName}`, { timeout: 5000 });
 
     /*
@@ -221,6 +229,28 @@ async function placeWidgetOnView(page, widgetName, withDelete) {
     }
 }
 
+async function openWidgetSet(page, widgetSetName) {
+    page = page || gPage;
+    await page.waitForSelector(`#summary_${widgetSetName}`, { timeout: 2000 });
+    await page.click(`#summary_${widgetSetName}`);
+}
+
+async function screenshot(page, fileName) {
+    page = page || gPage;
+    await page.screenshot({path: `${rootDir}tmp/screenshots/${fileName}.png`});
+}
+
+async function getListOfWidgets(page, widgetSetName)   {
+    page = page || gPage;
+    const widgets = await page.$$(`.widget-${widgetSetName}`);
+    const result = [];
+    for (let w = 0; w < widgets.length; w++) {
+        const wid = await (await widgets[w].getProperty('id')).jsonValue();
+        result.push(wid);
+    }
+    return result;
+}
+
 module.exports = {
     startIoBroker,
     stopIoBroker,
@@ -231,4 +261,7 @@ module.exports = {
     checkIsVisUploaded,
     checkIsVisUploadedAsync,
     placeWidgetOnView,
+    openWidgetSet,
+    screenshot,
+    getListOfWidgets,
 }
