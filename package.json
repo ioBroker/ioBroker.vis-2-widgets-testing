@@ -1,5 +1,5 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "@iobroker/vis-2-widgets-testing",
   "main": "index.js",
   "files": [
