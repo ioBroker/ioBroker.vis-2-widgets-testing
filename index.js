@@ -9,6 +9,7 @@ let states  = null;
 let onStateChanged = null;
 let gBrowser;
 let gPage;
+let gOptions;
 
 function deleteFoldersRecursive(path) {
     if (path.endsWith('/')) {
@@ -65,6 +66,7 @@ function startIoBroker(options) {
         const pack = require(`${rootDir}package.json`);
         options.widgetsSetName = pack.name.split('.').pop();
     }
+    gOptions = options;
 
     return new Promise(async resolve => {
         // delete the old project
@@ -118,6 +120,9 @@ function startIoBroker(options) {
                     states = _states;
                     setup.startCustomAdapter('web', 0);
                     setup.startCustomAdapter('vis-2-beta', 0);
+                    if (options.startOwnAdapter) {
+                        setup.startCustomAdapter(options.widgetsSetName, 0);
+                    }
                     await checkIsVisUploadedAsync(states);
                     resolve({ objects, states });
                 });
@@ -128,6 +133,9 @@ function startIoBroker(options) {
 async function stopIoBroker() {
     await setup.stopCustomAdapter('vis-2-beta', 0);
     await setup.stopCustomAdapter('web', 0);
+    if (gOptions.startOwnAdapter) {
+        setup.stopCustomAdapter(gOptions.widgetsSetName, 0);
+    }
 
     await new Promise(resolve =>
         setup.stopController(normalTerminated => {
