@@ -30,7 +30,10 @@ function deleteFoldersRecursive(path) {
 }
 
 async function startBrowser(headless) {
-    const browser = await puppeteer.launch({headless: !!headless});
+    const browser = await puppeteer.launch({
+        headless: headless === undefined ? false : headless,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const pages = await browser.pages();
     const timeout = 5000;
     pages[0].setDefaultTimeout(timeout);
