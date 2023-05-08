@@ -1,0 +1,43 @@
+{
+  "version": "0.1.0",
+  "name": "@iobroker/vis-2-widgets-testing",
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "description": "Module to test ioBroker vis-2 widgets",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ioBroker/ioBroker.vis-2-widgets-testing.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ioBroker/ioBroker.vis-2-widgets-testing/issues"
+  },
+  "homepage": "https://github.com/ioBroker/ioBroker.vis-2-widgets-testing#readme",
+  "author": {
+    "name": "bluefox",
+    "email": "dogafox@gmail.com"
+  },
+  "dependencies": {
+    "mocha": "^10.2.0",
+    "chai": "^4.3.7",
+    "axios": "^1.4.0",
+    "puppeteer": "^20.1.1",
+    "@iobroker/legacy-testing": "^0.2.6"
+  },
+  "devDependencies": {
+    "@alcalzone/release-script": "^3.5.9",
+    "@alcalzone/release-script-plugin-license": "^3.5.9"
+  },
+  "scripts": {
+    "update-packages": "ncu --upgrade",
+    "release": "release-script",
+    "release-patch": "release-script patch --yes",
+    "release-minor": "release-script minor --yes",
+    "release-major": "release-script major --yes"
+  }
+}
