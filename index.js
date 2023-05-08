@@ -222,6 +222,7 @@ async function addWidget(page, widgetName) {
 }
 
 async function deleteWidget(page, wid){
+    page = page || gPage;
     // select widget
     await page.click(`#${wid}`);
     await page.keyboard.press('Delete');
