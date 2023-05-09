@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const setup = require('@iobroker/legacy-testing');
 const axios = require('axios');
+const { blue, cyan, green, magenta, red, yellow } = require('colorette');
 
 let rootDir = `${__dirname}/../../../`;
 let objects = null;
@@ -48,6 +49,26 @@ async function startBrowser(headless) {
     gBrowser = browser;
     gPage = pages[0];
 
+    // LOGGING
+    gPage
+        .on('console', message => {
+            const type = message.type().substr(0, 3).toUpperCase();
+            const colors = {
+                LOG: text => text,
+                ERR: red,
+                WAR: yellow,
+                INF: cyan,
+            };
+
+            const color = colors[type] || blue;
+            console.log(color(`[BROWSER] ${type} ${message.text()}`));
+        })
+        .on('pageerror', ({ message }) => console.log(red(`[BROWSER] ${message}`)));
+        /*.on('response', response =>
+            console.log(green(`${response.status()} ${response.url()}`)))
+        .on('requestfailed', request =>
+            console.log(magenta(`${request.failure().errorText} ${request.url()}`)));*/
+
     return { browser, page: pages[0] };
 }
 
@@ -66,7 +87,12 @@ function startIoBroker(options) {
         const pack = require(`${rootDir}package.json`);
         options.widgetsSetName = pack.name.split('.').pop();
     }
+
     gOptions = options;
+
+    if (!gOptions.additionalAdapters) {
+        gOptions.additionalAdapters = ['web', 'vis-2-beta'];
+    }
 
     return new Promise(async resolve => {
         // delete the old project
@@ -84,22 +110,32 @@ function startIoBroker(options) {
                 console.error(`Cannot write file: ${e}`);
             }
         }
-        const webVersion = await latestVersion('iobroker.web');
-        const visVersion = await latestVersion('iobroker.vis-2-beta');
 
-        console.log(`Using web version: ${webVersion}, and vis-2-beta version: ${visVersion}`);
+        for (let a = 0; a < gOptions.additionalAdapters.length; a++) {
+            if (!gOptions.additionalAdapters[a].startsWith('iobroker.')) {
+                gOptions.additionalAdapters[a] = `iobroker.${gOptions.additionalAdapters[a]}`;
+            }
+            if (!gOptions.additionalAdapters[a].includes('@')) {
+                const version = await latestVersion(gOptions.additionalAdapters[a])
+                gOptions.additionalAdapters[a] += `@${version}`;
+                console.log(`Using version: ${gOptions.additionalAdapters[a]}`);
+            }
+        }
 
         // todo: detect latest versions of web and vis-2-beta
-        setup.setupController([`iobroker.web@${webVersion}`, `iobroker.vis-2-beta@${visVersion}`], async () => {
+        setup.setupController(gOptions.additionalAdapters, async () => {
             await setup.setOfflineState('vis-2-beta.0.info.uploaded', {val: 0});
+
             // lets the web adapter start on port 18082
             let config = await setup.getAdapterConfig(0, 'web');
-            config.native.port = 18082;
-            config.common.enabled = true;
-            await setup.setAdapterConfig(config.common, config.native, 0, 'web');
+            if (config && config.common) {
+                config.native.port = 18082;
+                config.common.enabled = true;
+                await setup.setAdapterConfig(config.common, config.native, 0, 'web');
+            }
 
             config = await setup.getAdapterConfig(0, 'vis-2-beta');
-            if (!config.common.enabled) {
+            if (config && config.common && !config.common.enabled) {
                 config.common.enabled = true;
                 await setup.setAdapterConfig(config.common, config.native, 0, 'vis-2-beta');
             }
@@ -118,8 +154,9 @@ function startIoBroker(options) {
                 async (_objects, _states) => {
                     objects = _objects;
                     states = _states;
-                    setup.startCustomAdapter('web', 0);
-                    setup.startCustomAdapter('vis-2-beta', 0);
+                    for (let a = 0; a < options.additionalAdapters.length; a++) {
+                        setup.startCustomAdapter(options.additionalAdapters[a].split('@')[0].replace('iobroker.', ''), 0);
+                    }
                     if (options.startOwnAdapter) {
                         setup.startCustomAdapter(options.widgetsSetName, 0);
                     }
@@ -131,11 +168,16 @@ function startIoBroker(options) {
 }
 
 async function stopIoBroker() {
-    await setup.stopCustomAdapter('vis-2-beta', 0);
-    await setup.stopCustomAdapter('web', 0);
-    if (gOptions.startOwnAdapter) {
-        setup.stopCustomAdapter(gOptions.widgetsSetName, 0);
+    for (let a = 0; a < gOptions.additionalAdapters.length; a++) {
+        await setup.stopCustomAdapter(gOptions.additionalAdapters[a].split('@')[0].replace('iobroker.', ''), 0);
     }
+
+    if (gOptions.startOwnAdapter) {
+        await setup.stopCustomAdapter(gOptions.widgetsSetName, 0);
+    }
+
+    // wait till adapters are stopped
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     await new Promise(resolve =>
         setup.stopController(normalTerminated => {
