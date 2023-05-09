@@ -94,18 +94,27 @@ function startIoBroker(options) {
         gOptions.additionalAdapters = ['web', 'vis-2-beta'];
     }
 
+    if (gOptions.additionalAdapters.includes('vis-2-beta')) {
+        gOptions.visUploadedId = 'vis-2-beta.0.info.uploaded';
+        gOptions.mainGuiProject = gOptions.mainGuiProject || 'vis-2-beta';
+    } else
+    if (gOptions.additionalAdapters.includes('vis')) {
+        gOptions.visUploadedId = 'vis.0.info.uploaded';
+        gOptions.mainGuiProject = gOptions.mainGuiProject || 'vis';
+    }
+
     return new Promise(async resolve => {
         // delete the old project
-        deleteFoldersRecursive(`${rootDir}tmp/iobroker-data/files/vis-2-beta.0`);
+        deleteFoldersRecursive(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`);
         deleteFoldersRecursive(`${rootDir}tmp/screenshots`);
         try {
-            fs.existsSync(`${rootDir}tmp/iobroker-data/files/vis-2-beta.0`) && fs.unlinkSync(`${rootDir}tmp/iobroker-data/files/vis-2-beta.0`);
+            fs.existsSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`) && fs.unlinkSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`);
         } catch (e) {
             console.error(`Cannot delete folder: ${e}`);
         }
-        if (fs.existsSync(`${rootDir}tmp/iobroker-data/files/vis-2-beta.0/_data.json`)) {
+        if (fs.existsSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0/_data.json`)) {
             try {
-                fs.writeFileSync(`${rootDir}tmp/iobroker-data/files/vis-2-beta.0/_data.json`, '{}');
+                fs.writeFileSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0/_data.json`, '{}');
             } catch (e) {
                 console.error(`Cannot write file: ${e}`);
             }
@@ -122,9 +131,10 @@ function startIoBroker(options) {
             }
         }
 
-        // todo: detect latest versions of web and vis-2-beta
         setup.setupController(gOptions.additionalAdapters, async () => {
-            await setup.setOfflineState('vis-2-beta.0.info.uploaded', {val: 0});
+            if (gOptions.visUploadedId) {
+                await setup.setOfflineState(gOptions.visUploadedId, { val: 0 });
+            }
 
             // lets the web adapter start on port 18082
             let config = await setup.getAdapterConfig(0, 'web');
@@ -134,10 +144,10 @@ function startIoBroker(options) {
                 await setup.setAdapterConfig(config.common, config.native, 0, 'web');
             }
 
-            config = await setup.getAdapterConfig(0, 'vis-2-beta');
+            config = await setup.getAdapterConfig(0, gOptions.mainGuiProject);
             if (config && config.common && !config.common.enabled) {
                 config.common.enabled = true;
-                await setup.setAdapterConfig(config.common, config.native, 0, 'vis-2-beta');
+                await setup.setAdapterConfig(config.common, config.native, 0, gOptions.mainGuiProject);
             }
 
             // enable widget set
@@ -160,7 +170,9 @@ function startIoBroker(options) {
                     if (options.startOwnAdapter) {
                         setup.startCustomAdapter(options.widgetsSetName, 0);
                     }
-                    await checkIsVisUploadedAsync(states);
+                    if (gOptions.visUploadedId) {
+                        await checkIsVisUploadedAsync(states);
+                    }
                     resolve({ objects, states });
                 });
         });
@@ -188,19 +200,25 @@ async function stopIoBroker() {
 
 async function createProject(page) {
     page = page || gPage;
-    await page.goto('http://127.0.0.1:18082/vis-2-beta/edit.html', { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('#create_new_project', { timeout: 10000 });
-    await page.click('#create_new_project');
+    if (gOptions.mainGuiProject) {
+        await page.goto(`http://127.0.0.1:18082/${gOptions.mainGuiProject}/edit.html`, { waitUntil: 'domcontentloaded' });
+        if (gOptions.mainGuiProject.startsWith('vis')) {
+            await page.waitForSelector('#create_new_project', {timeout: 10000});
+            await page.click('#create_new_project');
+        }
+    }
 
     // Create directory
     !fs.existsSync(`${rootDir}tmp/screenshots`) && fs.mkdirSync(`${rootDir}tmp/screenshots`);
     await page.screenshot({path: `${rootDir}tmp/screenshots/00_create-project.png`});
 
     // create the default project
-    await page.waitForSelector('#create_new_project_ok_buton');
-    await page.click('#create_new_project_ok_buton');
-    await page.waitForSelector('#summary_tabs', { timeout: 60000 }); // tabs are always visible
-    await page.screenshot({path: `${rootDir}tmp/screenshots/01_loaded.png`});
+    if (gOptions.mainGuiProject.startsWith('vis')) {
+        await page.waitForSelector('#create_new_project_ok_buton');
+        await page.click('#create_new_project_ok_buton');
+        await page.waitForSelector('#summary_tabs', {timeout: 60000}); // tabs are always visible
+        await page.screenshot({path: `${rootDir}tmp/screenshots/01_loaded.png`});
+    }
 }
 
 async function stopBrowser(browser) {
@@ -208,16 +226,14 @@ async function stopBrowser(browser) {
     await browser.close();
 }
 
-const VIS_UPLOADED_ID = 'vis-2-beta.0.info.uploaded';
-
 function checkIsVisUploaded(states, cb, counter) {
     counter = counter === undefined ? 20 : counter;
     if (counter === 0) {
-        return cb && cb(`Cannot check value Of State ${VIS_UPLOADED_ID}`);
+        return cb && cb(`Cannot check value Of State ${gOptions.visUploadedId}`);
     }
 
-    states.getState(VIS_UPLOADED_ID, (err, state) => {
-        console.log(`[${counter}]Check if vis is uploaded ${VIS_UPLOADED_ID} = ${JSON.stringify(state)}`);
+    states.getState(gOptions.visUploadedId, (err, state) => {
+        console.log(`[${counter}]Check if vis is uploaded ${gOptions.visUploadedId} = ${JSON.stringify(state)}`);
         err && console.error(err);
         if (state && state.val) {
             cb && cb();
@@ -286,7 +302,27 @@ async function deleteWidget(page, wid){
 async function openWidgetSet(page, widgetSetName) {
     page = page || gPage;
     await page.waitForSelector(`#summary_${widgetSetName}`, { timeout: 2000 });
-    await page.click(`#summary_${widgetSetName}`);
+
+    const el = await page.$(`#summary_${widgetSetName}`);
+    const className = await (await el.getProperty('className')).jsonValue();
+    if (!className.includes('vis-palette-summary-expanded')) {
+        await page.click(`#summary_${widgetSetName}`);
+    }
+}
+
+async function closeWidgetSet(page, widgetSetName) {
+    page = page || gPage;
+    try {
+        await page.waitForSelector(`#summary_${widgetSetName}`, { timeout: 1000 });
+        const el = await page.$(`#summary_${widgetSetName}`);
+        const className = await (await el.getProperty('className')).jsonValue();
+        if (className.includes('vis-palette-summary-expanded')) {
+            await page.click(`#summary_${widgetSetName}`);
+        }
+    } catch (e) {
+        // ignore error
+        console.log('Cannot close widget set: ' + e);
+    }
 }
 
 async function screenshot(page, fileName) {
@@ -305,6 +341,17 @@ async function getListOfWidgets(page, widgetSetName)   {
     return result;
 }
 
+async function getListOfWidgetSets(page)   {
+    page = page || gPage;
+    const widgets = await page.$$(`.vis-palette-widget-set`);
+    const result = [];
+    for (let w = 0; w < widgets.length; w++) {
+        const wid = await (await widgets[w].getProperty('id')).jsonValue();
+        result.push(wid.substring('summary_'.length));
+    }
+    return result;
+}
+
 module.exports = {
     startIoBroker,
     stopIoBroker,
@@ -318,6 +365,8 @@ module.exports = {
         addWidget,
         openWidgetSet,
         getListOfWidgets,
+        closeWidgetSet,
+        getListOfWidgetSets,
     },
     view: {
         deleteWidget,
