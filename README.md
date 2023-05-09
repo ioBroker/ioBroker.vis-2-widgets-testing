@@ -71,7 +71,7 @@ Add `mocha` to devDependencies:
 
 ## Changelog
 <!-- ### **WORK IN PROGRESS** -->
-### **WORK IN PROGRESS**
+### 0.2.6 (2023-05-09)
 * (bluefox) initial commit
 
 ## License
