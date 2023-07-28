@@ -91,12 +91,12 @@ function startIoBroker(options) {
     gOptions = options;
 
     if (!gOptions.additionalAdapters) {
-        gOptions.additionalAdapters = ['web', 'vis-2-beta'];
+        gOptions.additionalAdapters = ['web', 'vis-2'];
     }
 
-    if (gOptions.additionalAdapters.includes('vis-2-beta')) {
-        gOptions.visUploadedId = 'vis-2-beta.0.info.uploaded';
-        gOptions.mainGuiProject = gOptions.mainGuiProject || 'vis-2-beta';
+    if (gOptions.additionalAdapters.includes('vis-2')) {
+        gOptions.visUploadedId = 'vis-2.0.info.uploaded';
+        gOptions.mainGuiProject = gOptions.mainGuiProject || 'vis-2';
     } else
     if (gOptions.additionalAdapters.includes('vis')) {
         gOptions.visUploadedId = 'vis.0.info.uploaded';
