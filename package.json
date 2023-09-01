@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "mocha": "^10.2.0",
-    "chai": "^4.3.7",
+    "chai": "^4.3.8",
     "axios": "^1.4.0",
     "puppeteer": "^21.0.3",
     "@iobroker/legacy-testing": "^0.3.7",
