@@ -71,6 +71,9 @@ Add `mocha` to devDependencies:
 
 ## Changelog
 <!-- ### **WORK IN PROGRESS** -->
+### 1.0.0 (2023-12-15)
+* (bluefox) added vis-1 testing
+
 ### 0.3.0 (2023-07-28)
 * (bluefox) vis-2-beta is replaced with vis-2
 
