@@ -78,8 +78,14 @@ function latestVersion(packageName) {
         .then(res => res.data.version);
 }
 
-function startIoBroker(options) {
+function startIoBroker(options = {}) {
+    if (Object.keys(options).length) {
+        setup.setOptions(options);
+        setup.initialize();
+    }
+
     options = options || {};
+
     if (options.rootDir) {
         rootDir = options.rootDir;
     }
