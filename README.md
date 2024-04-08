@@ -71,6 +71,10 @@ Add `mocha` to devDependencies:
 
 ## Changelog
 <!-- ### **WORK IN PROGRESS** -->
+
+### **WORK IN PROGRESS**
+* (foxriver76) pass options down to setup
+
 ### 1.0.0 (2023-12-15)
 * (bluefox) added vis-1 testing
 
