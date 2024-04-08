@@ -71,8 +71,7 @@ Add `mocha` to devDependencies:
 
 ## Changelog
 <!-- ### **WORK IN PROGRESS** -->
-
-### **WORK IN PROGRESS**
+### 1.0.1 (2024-04-08)
 * (foxriver76) pass options down to setup
 
 ### 1.0.0 (2023-12-15)
