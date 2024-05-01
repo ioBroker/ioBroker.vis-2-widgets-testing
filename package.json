@@ -27,7 +27,7 @@
     "chai": "^4.4.1",
     "axios": "^1.6.8",
     "puppeteer": "^22.6.4",
-    "@iobroker/legacy-testing": "^1.0.11",
+    "@iobroker/legacy-testing": "^1.0.12",
     "colorette": "^2.0.20"
   },
   "devDependencies": {
