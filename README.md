@@ -71,6 +71,9 @@ Add `mocha` to devDependencies:
 
 ## Changelog
 <!-- ### **WORK IN PROGRESS** -->
+### **WORK IN PROGRESS**
+* (bluefox) Packages updated
+
 ### 1.0.3 (2024-04-14)
 * (bluefox) added support for the once mode
 
