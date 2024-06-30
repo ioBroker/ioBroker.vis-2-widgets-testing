@@ -23,10 +23,10 @@
     "email": "dogafox@gmail.com"
   },
   "dependencies": {
-    "mocha": "^10.4.0",
+    "mocha": "^10.5.2",
     "chai": "^4.4.1",
-    "axios": "^1.6.8",
-    "puppeteer": "^22.6.4",
+    "axios": "^1.7.2",
+    "puppeteer": "^22.12.1",
     "@iobroker/legacy-testing": "^1.0.12",
     "colorette": "^2.0.20"
   },
