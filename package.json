@@ -26,7 +26,7 @@
     "mocha": "^10.5.2",
     "chai": "^4.4.1",
     "axios": "^1.7.2",
-    "puppeteer": "^22.12.1",
+    "puppeteer": "^22.15.0",
     "@iobroker/legacy-testing": "^1.0.12",
     "colorette": "^2.0.20"
   },
