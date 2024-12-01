@@ -23,7 +23,7 @@
     "email": "dogafox@gmail.com"
   },
   "dependencies": {
-    "mocha": "^10.5.2",
+    "mocha": "^10.8.2",
     "chai": "^4.4.1",
     "axios": "^1.7.8",
     "puppeteer": "^22.12.1",
