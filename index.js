@@ -1,12 +1,12 @@
+const { existsSync, readdirSync, rmdirSync, unlinkSync, statSync, writeFileSync, mkdirSync } = require('node:fs');
 const puppeteer = require('puppeteer');
-const fs = require('fs');
-const setup = require('@iobroker/legacy-testing');
 const axios = require('axios');
 const { blue, cyan, green, magenta, red, yellow } = require('colorette');
+const setup = require('@iobroker/legacy-testing');
 
 let rootDir = `${__dirname}/../../../`;
 let objects = null;
-let states  = null;
+let states = null;
 let onStateChanged = null;
 let gBrowser;
 let gPage;
@@ -16,16 +16,16 @@ function deleteFoldersRecursive(path) {
     if (path.endsWith('/')) {
         path = path.substring(0, path.length - 1);
     }
-    if (fs.existsSync(path)) {
-        const files = fs.readdirSync(path);
+    if (existsSync(path)) {
+        const files = readdirSync(path);
         for (const file of files) {
             const curPath = `${path}/${file}`;
-            const stat = fs.statSync(curPath);
+            const stat = statSync(curPath);
             if (stat.isDirectory()) {
                 deleteFoldersRecursive(curPath);
-                fs.rmdirSync(curPath);
+                rmdirSync(curPath);
             } else {
-                fs.unlinkSync(curPath);
+                unlinkSync(curPath);
             }
         }
     }
@@ -40,7 +40,7 @@ async function startBrowser(headless) {
     const timeout = 5000;
     pages[0].setDefaultTimeout(timeout);
 
-    await pages[0].setViewport( {
+    await pages[0].setViewport({
         width: 1920,
         height: 1080,
         deviceScaleFactor: 1,
@@ -64,7 +64,7 @@ async function startBrowser(headless) {
             console.log(color(`[BROWSER] ${type} ${message.text()}`));
         })
         .on('pageerror', ({ message }) => console.log(red(`[BROWSER] ${message}`)));
-        /*.on('response', response =>
+    /*.on('response', response =>
             console.log(green(`${response.status()} ${response.url()}`)))
         .on('requestfailed', request =>
             console.log(magenta(`${request.failure().errorText} ${request.url()}`)));*/
@@ -73,9 +73,7 @@ async function startBrowser(headless) {
 }
 
 function latestVersion(packageName) {
-    return axios
-        .get(`https://registry.npmjs.org/${packageName}/latest`)
-        .then(res => res.data.version);
+    return axios.get(`https://registry.npmjs.org/${packageName}/latest`).then(res => res.data.version);
 }
 
 function startIoBroker(options = {}) {
@@ -103,8 +101,7 @@ function startIoBroker(options = {}) {
     if (gOptions.additionalAdapters.includes('vis-2')) {
         gOptions.visUploadedId = 'vis-2.0.info.uploaded';
         gOptions.mainGuiProject = gOptions.mainGuiProject || 'vis-2';
-    } else
-    if (gOptions.additionalAdapters.includes('vis')) {
+    } else if (gOptions.additionalAdapters.includes('vis')) {
         gOptions.visUploadedId = 'vis.0.info.uploaded';
         gOptions.mainGuiProject = gOptions.mainGuiProject || 'vis';
     }
@@ -114,13 +111,15 @@ function startIoBroker(options = {}) {
         deleteFoldersRecursive(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`);
         deleteFoldersRecursive(`${rootDir}tmp/screenshots`);
         try {
-            fs.existsSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`) && fs.unlinkSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`);
+            if (existsSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`)) {
+                unlinkSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0`);
+            }
         } catch (e) {
             console.error(`Cannot delete folder: ${e}`);
         }
-        if (fs.existsSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0/_data.json`)) {
+        if (existsSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0/_data.json`)) {
             try {
-                fs.writeFileSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0/_data.json`, '{}');
+                writeFileSync(`${rootDir}tmp/iobroker-data/files/${gOptions.mainGuiProject}.0/_data.json`, '{}');
             } catch (e) {
                 console.error(`Cannot write file: ${e}`);
             }
@@ -131,7 +130,7 @@ function startIoBroker(options = {}) {
                 gOptions.additionalAdapters[a] = `iobroker.${gOptions.additionalAdapters[a]}`;
             }
             if (!gOptions.additionalAdapters[a].includes('@')) {
-                const version = await latestVersion(gOptions.additionalAdapters[a])
+                const version = await latestVersion(gOptions.additionalAdapters[a]);
                 gOptions.additionalAdapters[a] += `@${version}`;
                 console.log(`Using version: ${gOptions.additionalAdapters[a]}`);
             }
@@ -171,7 +170,10 @@ function startIoBroker(options = {}) {
                     objects = _objects;
                     states = _states;
                     for (let a = 0; a < options.additionalAdapters.length; a++) {
-                        setup.startCustomAdapter(options.additionalAdapters[a].split('@')[0].replace('iobroker.', ''), 0);
+                        setup.startCustomAdapter(
+                            options.additionalAdapters[a].split('@')[0].replace('iobroker.', ''),
+                            0,
+                        );
                     }
                     if (options.startOwnAdapter) {
                         setup.startCustomAdapter(options.widgetsSetName, 0);
@@ -180,7 +182,8 @@ function startIoBroker(options = {}) {
                         await checkIsVisUploadedAsync(states);
                     }
                     resolve({ objects, states });
-                });
+                },
+            );
         });
     });
 }
@@ -201,29 +204,34 @@ async function stopIoBroker() {
         setup.stopController(normalTerminated => {
             console.log(`Adapter normal terminated: ${normalTerminated}`);
             resolve();
-        }));
+        }),
+    );
 }
 
 async function createProject(page) {
     page = page || gPage;
     if (gOptions.mainGuiProject) {
-        await page.goto(`http://127.0.0.1:18082/${gOptions.mainGuiProject}/edit.html`, { waitUntil: 'domcontentloaded' });
+        await page.goto(`http://127.0.0.1:18082/${gOptions.mainGuiProject}/edit.html`, {
+            waitUntil: 'domcontentloaded',
+        });
         if (gOptions.mainGuiProject.startsWith('vis')) {
-            await page.waitForSelector('#create_new_project', {timeout: 10000});
+            await page.waitForSelector('#create_new_project', { timeout: 10000 });
             await page.click('#create_new_project');
         }
     }
 
     // Create directory
-    !fs.existsSync(`${rootDir}tmp/screenshots`) && fs.mkdirSync(`${rootDir}tmp/screenshots`);
-    await page.screenshot({path: `${rootDir}tmp/screenshots/00_create-project.png`});
+    if (!existsSync(`${rootDir}tmp/screenshots`)) {
+        mkdirSync(`${rootDir}tmp/screenshots`);
+    }
+    await page.screenshot({ path: `${rootDir}tmp/screenshots/00_create-project.png` });
 
     // create the default project
     if (gOptions.mainGuiProject.startsWith('vis')) {
         await page.waitForSelector('#create_new_project_ok_buton');
         await page.click('#create_new_project_ok_buton');
-        await page.waitForSelector('#summary_tabs', {timeout: 60000}); // tabs are always visible
-        await page.screenshot({path: `${rootDir}tmp/screenshots/01_loaded.png`});
+        await page.waitForSelector('#summary_tabs', { timeout: 60000 }); // tabs are always visible
+        await page.screenshot({ path: `${rootDir}tmp/screenshots/01_loaded.png` });
     }
 }
 
@@ -244,8 +252,7 @@ function checkIsVisUploaded(states, cb, counter) {
         if (state && state.val) {
             cb && cb();
         } else {
-            setTimeout(() =>
-                checkIsVisUploaded(states, cb, counter - 1), 500);
+            setTimeout(() => checkIsVisUploaded(states, cb, counter - 1), 500);
         }
     });
 }
@@ -288,7 +295,7 @@ async function addWidget(page, widgetName) {
     console.log('Mouse up');
      */
 
-    const wid = await page.evaluate(async (_widgetName) => {
+    const wid = await page.evaluate(async _widgetName => {
         return await window.visAddWidget(_widgetName, 0, 0);
     }, widgetName);
 
@@ -296,12 +303,12 @@ async function addWidget(page, widgetName) {
     return wid;
 }
 
-async function deleteWidget(page, wid){
+async function deleteWidget(page, wid, timeout) {
     page = page || gPage;
     // select widget
     await page.click(`#${wid}`);
     await page.keyboard.press('Delete');
-    await page.waitForSelector(`#ar_dialog_confirm_ok_deleteDialog`, { timeout: 2000 });
+    await page.waitForSelector(`#ar_dialog_confirm_ok_deleteDialog`, { timeout: timeout || 2000 });
     await page.click('#ar_dialog_confirm_ok_deleteDialog');
 }
 
@@ -327,16 +334,16 @@ async function closeWidgetSet(page, widgetSetName) {
         }
     } catch (e) {
         // ignore error
-        console.log('Cannot close widget set: ' + e);
+        console.log(`Cannot close widget set: ${e}`);
     }
 }
 
 async function screenshot(page, fileName) {
     page = page || gPage;
-    await page.screenshot({path: `${rootDir}tmp/screenshots/${fileName}.png`});
+    await page.screenshot({ path: `${rootDir}tmp/screenshots/${fileName}.png` });
 }
 
-async function getListOfWidgets(page, widgetSetName)   {
+async function getListOfWidgets(page, widgetSetName) {
     page = page || gPage;
     const widgets = await page.$$(`.widget-${widgetSetName}`);
     const result = [];
@@ -347,7 +354,7 @@ async function getListOfWidgets(page, widgetSetName)   {
     return result;
 }
 
-async function getListOfWidgetSets(page)   {
+async function getListOfWidgetSets(page) {
     page = page || gPage;
     const widgets = await page.$$(`.vis-palette-widget-set`);
     const result = [];
@@ -364,7 +371,7 @@ module.exports = {
     startBrowser,
     stopBrowser,
     createProject,
-    setOnStateChanged: cb => onStateChanged = cb,
+    setOnStateChanged: cb => (onStateChanged = cb),
     checkIsVisUploaded,
     checkIsVisUploadedAsync,
     palette: {
@@ -378,4 +385,4 @@ module.exports = {
         deleteWidget,
     },
     screenshot,
-}
+};
