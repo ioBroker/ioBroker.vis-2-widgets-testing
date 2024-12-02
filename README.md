@@ -76,8 +76,7 @@ Add `mocha` to devDependencies:
 ## Changelog
 
 <!-- ### **WORK IN PROGRESS** -->
-
-### **WORK IN PROGRESS**
+### 1.0.5 (2024-12-02)
 
 - (bluefox) Packages updated
 - (bluefox) Added timeout parameter to `deleteWidget`
