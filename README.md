@@ -1,10 +1,10 @@
 # ioBroker.vis-2-widgets-testing
 
-With this library, you can test your own widgets for ioBroker.vis 2.0.
+With this library, you can test your own widgets for `ioBroker.vis` 2.0.
 
 ## How to use
 
-Create file `test/widgets.test.js` with following content:
+Create file `test/widgets.test.js` with the following content:
 
 ```js
 const helper = require('@iobroker/vis-2-widgets-testing');
@@ -76,6 +76,10 @@ Add `mocha` to devDependencies:
 ## Changelog
 
 <!-- ### **WORK IN PROGRESS** -->
+### **WORK IN PROGRESS**
+
+- (bluefox) Packages updated
+
 ### 1.0.5 (2024-12-02)
 
 - (bluefox) Packages updated
@@ -113,7 +117,7 @@ Add `mocha` to devDependencies:
 
 The MIT License (MIT)
 
-Copyright (c) 2023-2024 bluefox <dogafox@gmail.com>
+Copyright (c) 2023-2025 bluefox <dogafox@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

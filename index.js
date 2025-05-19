@@ -1,7 +1,7 @@
 const { existsSync, readdirSync, rmdirSync, unlinkSync, statSync, writeFileSync, mkdirSync } = require('node:fs');
 const puppeteer = require('puppeteer');
 const axios = require('axios');
-const { blue, cyan, green, magenta, red, yellow } = require('colorette');
+const { blue, cyan, /* green, magenta,*/ red, yellow } = require('colorette');
 const setup = require('@iobroker/legacy-testing');
 
 let rootDir = `${__dirname}/../../../`;
