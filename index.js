@@ -31,14 +31,13 @@ function deleteFoldersRecursive(path) {
     }
 }
 
-async function startBrowser(headless) {
+async function startBrowser(headless, timeout) {
     const browser = await puppeteer.launch({
         headless: headless === undefined ? false : headless,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const pages = await browser.pages();
-    const timeout = 5000;
-    pages[0].setDefaultTimeout(timeout);
+    pages[0].setDefaultTimeout(timeout || 5000);
 
     await pages[0].setViewport({
         width: 1920,
@@ -164,7 +163,7 @@ function startIoBroker(options = {}) {
 
             setup.startController(
                 false, // do not start widgets
-                (id, obj) => {},
+                (id, obj) => { },
                 (id, state) => onStateChanged && onStateChanged(id, state),
                 async (_objects, _states) => {
                     objects = _objects;
@@ -208,14 +207,14 @@ async function stopIoBroker() {
     );
 }
 
-async function createProject(page) {
+async function createProject(page, timeout) {
     page = page || gPage;
     if (gOptions.mainGuiProject) {
         await page.goto(`http://127.0.0.1:18082/${gOptions.mainGuiProject}/edit.html`, {
             waitUntil: 'domcontentloaded',
         });
         if (gOptions.mainGuiProject.startsWith('vis')) {
-            await page.waitForSelector('#create_new_project', { timeout: 10000 });
+            await page.waitForSelector('#create_new_project', { timeout: timeout || 10000 });
             await page.click('#create_new_project');
         }
     }
@@ -230,7 +229,7 @@ async function createProject(page) {
     if (gOptions.mainGuiProject.startsWith('vis')) {
         await page.waitForSelector('#create_new_project_ok_buton');
         await page.click('#create_new_project_ok_buton');
-        await page.waitForSelector('#summary_tabs', { timeout: 60000 }); // tabs are always visible
+        await page.waitForSelector('#summary_tabs', { timeout: timeout || 60000 }); // tabs are always visible
         await page.screenshot({ path: `${rootDir}tmp/screenshots/01_loaded.png` });
     }
 }
@@ -261,9 +260,9 @@ function checkIsVisUploadedAsync(states, counter) {
     return new Promise(resolve => checkIsVisUploaded(states, resolve, counter));
 }
 
-async function addWidget(page, widgetName) {
+async function addWidget(page, widgetName, timeout) {
     page = page || gPage;
-    await page.waitForSelector(`#widget_${widgetName}`, { timeout: 5000 });
+    await page.waitForSelector(`#widget_${widgetName}`, { timeout: timeout || 5000 });
 
     /*
     // place this widget on the view
@@ -299,7 +298,7 @@ async function addWidget(page, widgetName) {
         return await window.visAddWidget(_widgetName, 0, 0);
     }, widgetName);
 
-    await page.waitForSelector(`#${wid}`, { timeout: 2000 });
+    await page.waitForSelector(`#${wid}`, { timeout: timeout || 2000 });
     return wid;
 }
 
@@ -312,9 +311,9 @@ async function deleteWidget(page, wid, timeout) {
     await page.click('#ar_dialog_confirm_ok_deleteDialog');
 }
 
-async function openWidgetSet(page, widgetSetName) {
+async function openWidgetSet(page, widgetSetName, timeout) {
     page = page || gPage;
-    await page.waitForSelector(`#summary_${widgetSetName}`, { timeout: 2000 });
+    await page.waitForSelector(`#summary_${widgetSetName}`, { timeout: timeout || 2000 });
 
     const el = await page.$(`#summary_${widgetSetName}`);
     const className = await (await el.getProperty('className')).jsonValue();
@@ -323,10 +322,10 @@ async function openWidgetSet(page, widgetSetName) {
     }
 }
 
-async function closeWidgetSet(page, widgetSetName) {
+async function closeWidgetSet(page, widgetSetName, timeout) {
     page = page || gPage;
     try {
-        await page.waitForSelector(`#summary_${widgetSetName}`, { timeout: 1000 });
+        await page.waitForSelector(`#summary_${widgetSetName}`, { timeout: timeout || 1000 });
         const el = await page.$(`#summary_${widgetSetName}`);
         const className = await (await el.getProperty('className')).jsonValue();
         if (className.includes('vis-palette-summary-expanded')) {
