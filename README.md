@@ -4,55 +4,64 @@ With this library, you can test your own widgets for `ioBroker.vis` 2.0.
 
 ## How to use
 
-Create file `test/widgets.test.js` with the following content:
+The package is written in TypeScript and ships its own type declarations, so the helpers are typed in
+JavaScript tests too.
 
-```js
-const helper = require('@iobroker/vis-2-widgets-testing');
-const adapterName = require('../package.json').name.split('.').pop(); // get widgets name from package.json
-let page;
-let browser;
+Create the file `test/widgets.test.ts` with the following content:
 
-let objects = null;
-let states = null;
+```ts
+import type { Browser, Page } from 'puppeteer';
+import * as helper from '@iobroker/vis-2-widgets-testing';
+import { name } from '../package.json';
 
-describe('vis-2-widgets-material', () => {
+// get the name of the widget set from package.json, e.g. `vis-2-widgets-material`
+const adapterName = name.split('.').pop() as string;
+
+let page: Page;
+let browser: Browser;
+
+describe(adapterName, () => {
     before(async function () {
-        this.timeout(180000); // because installation could last some time
+        this.timeout(180_000); // because the installation could last some time
 
         // install js-controller, web and vis-2
-        let result = await helper.startIoBroker(adapterName);
-        objects = result.objects;
-        states = result.states;
+        await helper.startIoBroker({ widgetsSetName: adapterName });
 
-        // start browser
-        result = await helper.startPuppeteer(true); // true = headless
+        // start the browser
+        const result = await helper.startBrowser(true); // true = headless
         browser = result.browser;
         page = result.page;
 
-        // Create default vis project
+        // create the default vis-2 project
         await helper.createProject(page);
 
-        // open widgets
-        await page.waitForSelector(`#summary_${adapterName}`, { timeout: 5000 });
-        await page.click(`#summary_${adapterName}`);
-        await page.screenshot({ path: 'tmp/screenshots/02_widgets_opened.png' });
+        // open the palette of the own widget set
+        await helper.palette.openWidgetSet(page, adapterName);
+        await helper.screenshot(page, '02_widgets_opened');
     });
 
     it('Check all widgets', async function () {
-        this.timeout(60000);
-        const widgets = await page.$$(`.widget-${adapterName}`);
-        for (let w = 0; w < widgets.length; w++) {
-            const wid = await (await widgets[w].getProperty('id')).jsonValue();
-            await helper.placeWidgetOnView(page, wid.substring('widget_'.length), true);
+        this.timeout(60_000);
+
+        for (const widgetName of await helper.palette.getListOfWidgets(page, adapterName)) {
+            const wid = await helper.palette.addWidget(page, widgetName);
+            await helper.screenshot(page, `10_${widgetName}`);
+            await helper.view.deleteWidget(page, wid);
         }
     });
 
     after(async function () {
-        this.timeout(5000);
-        await helper.stopPuppeteer(browser);
-        return helper.stopIoBroker();
+        this.timeout(10_000);
+        await helper.stopBrowser(browser);
+        await helper.stopIoBroker();
     });
 });
+```
+
+A test in JavaScript works just the same, the module is published as CommonJS:
+
+```js
+const helper = require('@iobroker/vis-2-widgets-testing');
 ```
 
 Create the task in package.json:
@@ -60,7 +69,7 @@ Create the task in package.json:
 ```json
   "scripts": {
     ...
-    "test": "mocha ./test/*.test.js"
+    "test": "mocha ./test/*.test.ts"
   },
 ```
 
@@ -69,13 +78,36 @@ Add `mocha` to devDependencies:
 ```json
   "devDependencies": {
     ...
-    "mocha": "^6.2.0"
+    "mocha": "^12.0.0"
   },
+```
+
+### Options of `startIoBroker`
+
+| Option                 | Default                | Description                                                           |
+| ---------------------- | ---------------------- | --------------------------------------------------------------------- |
+| `rootDir`              | the project under test | Directory that holds `tmp/` and the `package.json` of the widget set. |
+| `widgetsSetName`       | from `package.json`    | Name of the widget set, e.g. `vis-2-widgets-material`.                |
+| `additionalAdapters`   | `['web', 'vis-2']`     | Adapters that are installed next to the js-controller.                |
+| `startOwnAdapter`      | `false`                | Start the adapter of the widget set itself too.                       |
+| `mainGuiProject`       | from the adapters      | `vis` or `vis-2`.                                                     |
+| `visUploadedTimeoutMs` | `120000`               | How long to wait until the GUI adapter has uploaded its files.        |
+
+## Development
+
+```bash
+npm run build   # compile src/index.ts to build/
+npm run check   # type check only
+npm run lint    # eslint
 ```
 
 ## Changelog
 
-<!-- ### **WORK IN PROGRESS** -->
+### **WORK IN PROGRESS**
+
+- (bluefox) Migrated the library to TypeScript. The package is compiled to `build/` and ships type
+  declarations; the public API is unchanged.
+
 ### 1.0.6 (2025-05-19)
 
 - (bluefox) Packages updated
@@ -99,7 +131,7 @@ Add `mocha` to devDependencies:
 
 ### 1.0.1 (2024-04-08)
 
-- (foxriver76) pass options down to setup
+- (foxriver76) pass options down to set up
 
 ### 1.0.0 (2023-12-15)
 
@@ -117,7 +149,7 @@ Add `mocha` to devDependencies:
 
 The MIT License (MIT)
 
-Copyright (c) 2023-2025 bluefox <dogafox@gmail.com>
+Copyright (c) 2023-2026 bluefox <dogafox@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

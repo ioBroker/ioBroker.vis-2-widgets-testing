@@ -1,45 +1,61 @@
 {
-  "version": "1.0.6",
-  "name": "@iobroker/vis-2-widgets-testing",
-  "main": "index.js",
-  "files": [
-    "index.js"
-  ],
-  "description": "Module to test ioBroker vis-2 widgets",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ioBroker/ioBroker.vis-2-widgets-testing.git"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/ioBroker/ioBroker.vis-2-widgets-testing/issues"
-  },
-  "homepage": "https://github.com/ioBroker/ioBroker.vis-2-widgets-testing#readme",
-  "author": {
-    "name": "bluefox",
-    "email": "dogafox@gmail.com"
-  },
-  "dependencies": {
-    "mocha": "^11.3.0",
-    "chai": "^4.5.0",
-    "axios": "^1.9.0",
-    "puppeteer": "^24.8.2",
-    "@iobroker/legacy-testing": "^2.0.2",
-    "colorette": "^2.0.20"
-  },
-  "devDependencies": {
-    "@alcalzone/release-script": "^3.8.0",
-    "@alcalzone/release-script-plugin-license": "^3.7.0",
-    "@iobroker/eslint-config": "^2.0.1"
-  },
-  "scripts": {
-    "update-packages": "npx -y npm-check-updates --upgrade",
-    "release": "release-script",
-    "release-patch": "release-script patch --yes",
-    "release-minor": "release-script minor --yes",
-    "release-major": "release-script major --yes"
-  }
+    "version": "1.0.6",
+    "name": "@iobroker/vis-2-widgets-testing",
+    "main": "build/index.js",
+    "types": "build/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./build/index.d.ts",
+            "default": "./build/index.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "build/"
+    ],
+    "description": "Module to test ioBroker vis-2 widgets",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ioBroker/ioBroker.vis-2-widgets-testing.git"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ioBroker/ioBroker.vis-2-widgets-testing/issues"
+    },
+    "homepage": "https://github.com/ioBroker/ioBroker.vis-2-widgets-testing#readme",
+    "author": {
+        "name": "bluefox",
+        "email": "dogafox@gmail.com"
+    },
+    "dependencies": {
+        "@iobroker/legacy-testing": "^3.0.1",
+        "axios": "^1.20.0",
+        "colorette": "^2.0.20",
+        "mocha": "^12.0.0",
+        "puppeteer": "^25.10.0"
+    },
+    "devDependencies": {
+        "@alcalzone/release-script": "^5.2.1",
+        "@alcalzone/release-script-plugin-license": "^5.2.2",
+        "@iobroker/db-objects-redis": "^7.2.2",
+        "@iobroker/db-states-redis": "^7.2.2",
+        "@iobroker/eslint-config": "^2.3.4",
+        "@iobroker/types": "^7.2.2",
+        "@types/node": "^26.4.1",
+        "typescript": "~6.0.3"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "check": "tsc -p tsconfig.json",
+        "lint": "eslint -c eslint.config.mjs .",
+        "prepublishOnly": "npm run build",
+        "update-packages": "npx -y npm-check-updates --upgrade",
+        "release": "release-script",
+        "release-patch": "release-script patch --yes",
+        "release-minor": "release-script minor --yes",
+        "release-major": "release-script major --yes"
+    }
 }
