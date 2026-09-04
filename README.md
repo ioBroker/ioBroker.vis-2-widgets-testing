@@ -102,8 +102,7 @@ npm run lint    # eslint
 ```
 
 ## Changelog
-
-### **WORK IN PROGRESS**
+### 1.0.7 (2026-09-04)
 
 - (bluefox) Migrated the library to TypeScript. The package is compiled to `build/` and ships type
   declarations; the public API is unchanged.
