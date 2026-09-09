@@ -334,7 +334,10 @@ export async function createProject(page?: Page | null, timeout?: number): Promi
     if (options.mainGuiProject?.startsWith('vis')) {
         await usedPage.waitForSelector('#create_new_project_ok_buton');
         await usedPage.click('#create_new_project_ok_buton');
-        await usedPage.waitForSelector('#summary_tabs', { timeout: timeout || 60000 }); // tabs are always visible
+        // the editor is loaded once the palette draws a widget set. "basic" is the set to wait for: it is the
+        // one every vis-2 installation ships, while the sets around it come and go - "tabs" stood here until
+        // its single widget moved into "basic" and left the editor without a group of that name
+        await usedPage.waitForSelector('#summary_basic', { timeout: timeout || 60000 });
         await usedPage.screenshot({ path: `${rootDir}tmp/screenshots/01_loaded.png` });
     }
 }
