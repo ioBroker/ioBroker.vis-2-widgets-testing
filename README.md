@@ -102,6 +102,10 @@ npm run lint    # eslint
 ```
 
 ## Changelog
+### **WORK_IN_PROGRESS**
+- (@typhosj) Wait for basic widgets instead of the view tabs
+- (@GermanBluefox) Changed add widget procedure
+
 ### 1.0.7 (2026-09-04)
 
 - (bluefox) Migrated the library to TypeScript. The package is compiled to `build/` and ships type

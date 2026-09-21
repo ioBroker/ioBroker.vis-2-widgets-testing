@@ -434,10 +434,11 @@ async function addWidget(page: Page | null | undefined, widgetName: string, time
  * Put a widget on the view by really dragging it out of the palette.
  *
  * `addWidget` calls `window.visAddWidget` instead, which is quicker and enough for a test that only needs a
- * widget to be there - but it walks past the whole drag and drop of the editor. That path runs on react-dnd
- * with its HTML5 backend, which listens to the native drag events, so an earlier attempt here with
- * `mouse.down`, a few `mouse.move`s and a `mouse.up` could never work: those are mouse events and no
- * `dragstart` is among them. Puppeteer sends the real ones, but only once drag interception is switched on.
+ * widget to be there - but it walks past the whole drag and drop of the editor.
+ *
+ * That path is dnd-kit since vis-2 2.20.1, and dnd-kit listens to pointer events, so a plain mouse gesture is
+ * what drives it - no `setDragInterception` and no native `dragstart` needed. Against an older vis-2, which
+ * used react-dnd with its HTML5 backend, this does nothing: mouse events alone never started a drag there.
  *
  * @param page page of the editor
  * @param widgetName name of the widget in the palette, e.g. `tplValueString`
@@ -457,15 +458,21 @@ async function dragWidgetToView(page: Page | null | undefined, widgetName: strin
         throw new Error(`Cannot find "${widgetName}" in the palette or the view to drop it on`);
     }
 
-    await usedPage.setDragInterception(true);
-    try {
-        await source.dragAndDrop(target);
-        // the drop writes the project, and the widget arrives with the next render
-        await new Promise<void>(resolve => setTimeout(resolve, 2000));
-    } finally {
-        // leave the page as it was found, whatever happened
-        await usedPage.setDragInterception(false);
+    const from = await source.boundingBox();
+    const to = await target.boundingBox();
+    if (!from || !to) {
+        throw new Error(`"${widgetName}" or the view is not on the screen`);
     }
+
+    await usedPage.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await usedPage.mouse.down();
+    // the first move has to clear the few pixels that tell a drag from a click, the rest carry it over
+    await usedPage.mouse.move(from.x + from.width / 2 + 10, from.y + from.height / 2 + 10);
+    await usedPage.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 });
+    await usedPage.mouse.up();
+
+    // the drop writes the project, and the widget arrives with the next render
+    await new Promise<void>(resolve => setTimeout(resolve, 2000));
 
     const added = (await widgetIds()).filter(id => !before.includes(id));
     if (added.length !== 1) {
