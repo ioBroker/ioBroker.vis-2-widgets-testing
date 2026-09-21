@@ -102,7 +102,7 @@ npm run lint    # eslint
 ```
 
 ## Changelog
-### **WORK_IN_PROGRESS**
+### **WORK IN PROGRESS**
 - (@typhosj) Wait for basic widgets instead of the view tabs
 - (@GermanBluefox) Changed add widget procedure
 - (@GermanBluefox) Works only with vis-2 >= 2.20
