@@ -45,7 +45,7 @@
     "@iobroker/eslint-config": "^2.3.4",
     "@iobroker/types": "^7.2.3",
     "@types/node": "^26.6.2",
-    "typescript": "~6.0.3"
+    "typescript": "~7.0.2"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
