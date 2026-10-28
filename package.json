@@ -44,7 +44,7 @@
     "@iobroker/db-states-redis": "^7.2.3",
     "@iobroker/eslint-config": "^2.3.4",
     "@iobroker/types": "^7.2.3",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.3",
     "typescript": "~6.0.3"
   },
   "scripts": {
