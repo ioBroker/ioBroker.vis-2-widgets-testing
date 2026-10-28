@@ -102,6 +102,9 @@ npm run lint    # eslint
 ```
 
 ## Changelog
+### **WORK IN PROGRESS**
+- (@GermanBluefox) Detect vis/vis-2 also when a version is given in `additionalAdapters` (#87)
+
 ### 2.0.0 (2026-09-21)
 - (@typhosj) Wait for basic widgets instead of the view tabs
 - (@GermanBluefox) Changed add widget procedure
