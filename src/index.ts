@@ -19,9 +19,15 @@ export interface TestingOptions extends LegacyTestingOptions {
     additionalAdapters?: string[];
     /** Start the adapter of the widget set itself too. */
     startOwnAdapter?: boolean;
-    /** `vis` or `vis-2`; derived from `additionalAdapters` when it is not given. */
+    /**
+     * `vis` or `vis-2`; derived from `additionalAdapters` when it is not given.
+     * Entries with a version (`vis-2@x.y.z`) or with the `iobroker.` prefix are recognized too.
+     */
     mainGuiProject?: string;
-    /** State that tells that the GUI adapter has uploaded its files. Derived from `additionalAdapters`. */
+    /**
+     * State that tells that the GUI adapter has uploaded its files. Derived from `additionalAdapters`
+     * (also with a version like `vis-2@x.y.z`) when it is not given.
+     */
     visUploadedId?: string;
     /** How long to wait for the upload of the GUI adapter. Default: 120000 ms. */
     visUploadedTimeoutMs?: number;
@@ -160,6 +166,16 @@ async function latestVersion(packageName: string): Promise<string> {
 }
 
 /**
+ * Get the plain adapter name from an entry of `additionalAdapters`.
+ *
+ * @param spec e.g. `vis-2`, `vis-2@2.15.8` or `iobroker.vis-2@2.15.8`
+ * @returns the adapter name without version and `iobroker.` prefix, e.g. `vis-2`
+ */
+function adapterName(spec: string): string {
+    return spec.split('@')[0].replace(/^iobroker\./, '');
+}
+
+/**
  * Install and start the js-controller together with the adapters the widgets need.
  *
  * @param options what to install and where
@@ -188,11 +204,12 @@ export async function startIoBroker(options: TestingOptions = {}): Promise<IoBro
         additionalAdapters: options.additionalAdapters || ['web', 'vis-2'],
     };
 
-    if (resolved.additionalAdapters.includes('vis-2')) {
-        resolved.visUploadedId = 'vis-2.0.info.uploaded';
+    const names = resolved.additionalAdapters.map(adapterName);
+    if (names.includes('vis-2')) {
+        resolved.visUploadedId = resolved.visUploadedId || 'vis-2.0.info.uploaded';
         resolved.mainGuiProject = resolved.mainGuiProject || 'vis-2';
-    } else if (resolved.additionalAdapters.includes('vis')) {
-        resolved.visUploadedId = 'vis.0.info.uploaded';
+    } else if (names.includes('vis')) {
+        resolved.visUploadedId = resolved.visUploadedId || 'vis.0.info.uploaded';
         resolved.mainGuiProject = resolved.mainGuiProject || 'vis';
     }
 
@@ -256,7 +273,7 @@ export async function startIoBroker(options: TestingOptions = {}): Promise<IoBro
                         void (async (): Promise<void> => {
                             for (let a = 0; a < resolved.additionalAdapters.length; a++) {
                                 setup.startCustomAdapter(
-                                    resolved.additionalAdapters[a].split('@')[0].replace('iobroker.', ''),
+                                    adapterName(resolved.additionalAdapters[a]),
                                     0,
                                 );
                             }
@@ -286,7 +303,7 @@ export async function stopIoBroker(): Promise<void> {
     const options = requireOptions();
 
     for (let a = 0; a < options.additionalAdapters.length; a++) {
-        await setup.stopCustomAdapter(options.additionalAdapters[a].split('@')[0].replace('iobroker.', ''), 0);
+        await setup.stopCustomAdapter(adapterName(options.additionalAdapters[a]), 0);
     }
 
     if (options.startOwnAdapter) {
