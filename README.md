@@ -102,7 +102,7 @@ npm run lint    # eslint
 ```
 
 ## Changelog
-### **WORK IN PROGRESS**
+### 2.0.1 (2026-10-29)
 - (@GermanBluefox) Detect vis/vis-2 also when a version is given in `additionalAdapters` (#87)
 
 ### 2.0.0 (2026-09-21)
