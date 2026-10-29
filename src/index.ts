@@ -272,10 +272,7 @@ export async function startIoBroker(options: TestingOptions = {}): Promise<IoBro
                     (_objects, _states) => {
                         void (async (): Promise<void> => {
                             for (let a = 0; a < resolved.additionalAdapters.length; a++) {
-                                setup.startCustomAdapter(
-                                    adapterName(resolved.additionalAdapters[a]),
-                                    0,
-                                );
+                                setup.startCustomAdapter(adapterName(resolved.additionalAdapters[a]), 0);
                             }
                             if (resolved.startOwnAdapter) {
                                 setup.startCustomAdapter(resolved.widgetsSetName, 0);
